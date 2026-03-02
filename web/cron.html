@@ -1,0 +1,145 @@
+<style>
+    .cron-wrapper { padding: 15px; max-width: 1000px; margin: 0 auto; }
+    .cron-table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .cron-table th { background: #495057; color: #fff; padding: 12px; text-align: left; font-size: 14px; }
+    .cron-table td { padding: 8px; border-bottom: 1px solid #dee2e6; }
+    .cron-table tr:hover { background: #f8f9fa; }
+
+    .c-input { width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+    .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { border: none; border-radius: 4px; padding: 10px 20px; color: #fff; font-weight: bold; cursor: pointer; }
+    .btn-add { background: #28a745; }
+    .btn-save { background: #007bff; }
+    .btn-del { background: #dc3545; padding: 5px 10px; }
+</style>
+
+<div class="cron-wrapper">
+    <h3>Управление задачами (Crontab)</h3>
+    <table class="cron-table">
+        <thead>
+            <tr>
+                <th width="40">Вкл</th>
+                <th width="160">Минуты Часы Дни ...</th>
+                <th>Команда</th>
+                <th>Параметры (JSON)</th>
+                <th>Метка</th>
+                <th width="30"></th>
+            </tr>
+        </thead>
+        <tbody id="cron-list">
+            </tbody>
+    </table>
+
+    <div class="btn-row">
+        <button class="btn btn-add" onclick="addRow()">+ Добавить задачу</button>
+        <button class="btn btn-save" onclick="saveData()">Записать в ESP</button>
+    </div>
+</div>
+
+<script>
+    let availableCmds = [];
+
+    async function loadCron() {
+        try {
+            const r = await fetch('/api/cron/ls');
+            const d = await r.json();
+
+            // Запоминаем список команд [task, id, label, params]
+            availableCmds = d.cmd_list || [];
+
+            const tbody = document.getElementById('cron-list');
+            tbody.innerHTML = '';
+
+            // Рендерим текущие задачи [enabled, schedule, id, params, label]
+            if (d.tasks) {
+                d.tasks.forEach(t => addRow(t));
+            }
+        } catch (e) {
+            console.error("Ошибка загрузки Крона:", e);
+        }
+    }
+
+    function addRow(t = [false, "* * * * *", -1, null, ""]) {
+        const tbody = document.getElementById('cron-list');
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td align="center"><input type="checkbox" class="inp-enabled" ${t[0] ? 'checked' : ''}></td>
+            <td><input type="text" class="c-input inp-sched" value="${t[1]}"></td>
+            <td><select class="c-input sel-cmd"></select></td>
+            <td><input type="text" class="c-input inp-params" value='${JSON.stringify(t[3])}'></td>
+            <td><input type="text" class="c-input inp-label" value="${t[4] || ''}"></td>
+            <td><button class="btn btn-del" onclick="this.closest('tr').remove()">✕</button></td>
+        `;
+
+        const sel = tr.querySelector('.sel-cmd');
+        const paramInput = tr.querySelector('.inp-params');
+
+        // Добавляем пустую опцию, если создается новая пустая задача
+        if (t[2] === -1) {
+            const defOpt = document.createElement('option');
+            defOpt.value = -1;
+            defOpt.text = "-- Выберите команду --";
+            sel.appendChild(defOpt);
+        }
+
+        availableCmds.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c[0]; // ID команды
+            opt.text = c[1] || `ID: ${c[0]}`; // Название
+            if (c[0] === t[2]) opt.selected = true;
+            sel.appendChild(opt);
+        });
+
+        // БОНУС: Автоподстановка дефолтных параметров при выборе команды
+        sel.addEventListener('change', function() {
+            const selectedId = parseInt(this.value);
+            const cmdData = availableCmds.find(c => c[0] === selectedId);
+            if (cmdData && cmdData[2] !== undefined) {
+                paramInput.value = JSON.stringify(cmdData[2]);
+            }
+        });
+
+        tbody.appendChild(tr);
+    }
+
+    async function saveData() {
+        const rows = document.querySelectorAll('#cron-list tr');
+
+        // Надежный маппинг по классам
+        const payload = Array.from(rows).map(tr => {
+            const enabled = tr.querySelector('.inp-enabled').checked;
+            const schedule = tr.querySelector('.inp-sched').value;
+            const cmdId = parseInt(tr.querySelector('.sel-cmd').value);
+            const paramsStr = tr.querySelector('.inp-params').value;
+            const label = tr.querySelector('.inp-label').value;
+
+            let parsedParams;
+            try {
+                // Превращаем '[3,1]' обратно в реальный массив
+                parsedParams = JSON.parse(paramsStr);
+            } catch (e) {
+                parsedParams = paramsStr;
+            }
+
+            return [enabled, schedule, cmdId, parsedParams, label];
+        });
+
+        const res = await fetch('/api/cron/set', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('Сохранено в crontab.json');
+            loadCron(); // Перезагружаем, чтобы убедиться, что всё ок
+        } else {
+            alert('Ошибка сохранения');
+        }
+    }
+
+    // Инициализация
+    if (document.readyState === 'complete') loadCron();
+    else window.addEventListener('load', loadCron);
+</script>

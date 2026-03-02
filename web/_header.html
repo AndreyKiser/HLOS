@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLOS: {{name}}</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/common.js" defer></script>
+    <style>
+        .app-bar { display: flex; justify-content: space-between; align-items: center; }
+        .app-bar-left { display: flex; align-items: center; gap: 10px; }
+        .header-clock { font-size: 1.2rem; font-weight: bold; font-family: Consolas, monospace; background: rgba(0, 0, 0, 0.1); padding: 4px 10px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="app-bar">
+        <div class="app-bar-left">
+            <a href="/" class="app-logo" title="На главную">🏠</a>
+            <span class="app-title">HLOS: {{name}}</span>
+        </div>
+        <div id="header-time" class="header-clock">--:--:--</div>
+    </div>

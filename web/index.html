@@ -1,0 +1,113 @@
+<style>
+    /* Стили для Главной страницы (Дашборда) */
+    .dashboard-header {
+        margin: 20px 0;
+        color: #333;
+        font-size: 1.6rem;
+        font-weight: bold;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .dash-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #333;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .dash-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    .dash-icon {
+        font-size: 3.5rem;
+        line-height: 1;
+    }
+    .dash-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .dash-desc {
+        font-size: 1rem;
+        color: #6c757d;
+        line-height: 1.4;
+    }
+</style>
+
+<div class="container">
+ <div id="default-pass-warning" style="display: none; background-color: #ff9800; color: white; padding: 15px; text-align: center; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <strong style="font-size: 1.1em;">⚠️ Внимание! Уязвимость безопасности</strong><br>
+        Устройство использует стандартный пароль для входа (123456789). <br>
+        Настоятельно рекомендуем <a href="/system" style="color: #fff; text-decoration: underline; font-weight: bold;">сменить его в Настройках Системы</a>.
+    </div>
+
+    <script>
+        // Короткий скрипт, который спрашивает у сервера: "У нас пароль по умолчанию?"
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.default_pass) {
+                    document.getElementById('default-pass-warning').style.display = 'block';
+                }
+            })
+            .catch(e => console.error("Ошибка проверки безопасности", e));
+        });
+    </script>
+    <div class="dashboard-header">
+        Панель управления
+    </div>
+
+    <div class="dashboard-grid">
+        <a href="/standard" class="dash-card">
+            <div class="dash-icon">🎛️</div>
+            <div class="dash-title">Управление (Пины)</div>
+            <div class="dash-desc">Мониторинг датчиков и ручное управление реле/пинами в реальном времени</div>
+        </a>
+
+        <a href="/files" class="dash-card">
+            <div class="dash-icon">📁</div>
+            <div class="dash-title">Файловый менеджер</div>
+            <div class="dash-desc">Просмотр, загрузка и встроенный редактор файлов ESP32</div>
+        </a>
+
+        <a href="/network" class="dash-card">
+            <div class="dash-icon">🌐</div>
+            <div class="dash-title">Настройки сети</div>
+            <div class="dash-desc">Управление Wi-Fi подключением и конфигурация IP-адреса</div>
+        </a>
+
+        <a href="/cron" class="dash-card">
+            <div class="dash-icon">⏱️</div>
+            <div class="dash-title">Планировщик (Cron)</div>
+            <div class="dash-desc">Настройка автоматических задач и управления реле по времени</div>
+        </a>
+
+        <a href="/system" class="dash-card">
+            <div class="dash-icon">⚙️</div>
+            <div class="dash-title">Система</div>
+            <div class="dash-desc">Информация о чипе, настройка времени и перезагрузка</div>
+        </a>
+
+        </div>
+</div>

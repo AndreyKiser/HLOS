@@ -1,0 +1,110 @@
+<style>
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .status-box { background: #f8f9fa; border: 1px solid #ddd; padding: 12px 8px; border-radius: 8px; text-align: center; }
+    .status-box.ok { border-color: #28a745; background: #e6ffec; color: #155724; }
+    .status-box.err { border-color: #dc3545; background: #ffe6e6; color: #721c24; }
+    .status-label { font-size: 0.8rem; color: #666; margin-bottom: 5px; }
+
+    .status-val {
+        font-size: clamp(0.75rem, 4vw, 1.1rem);
+        font-weight: bold;
+        font-family: Consolas, monospace;
+        white-space: nowrap;
+        letter-spacing: -0.5px;
+    }
+
+    .wifi-list { max-height: 200px; overflow-y: auto; border: 1px solid #eee; margin-top: 10px; border-radius: 4px; }
+    .wifi-item { padding: 8px 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+    .wifi-item:hover { background: #f0f8ff; }
+    .wifi-rssi { font-size: 0.8rem; color: #888; }
+
+    .static-ip-block { background: #fdfdfd; border-left: 3px solid #007bff; padding: 10px 15px; margin-top: 10px; border-radius: 0 4px 4px 0; }
+</style>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header"><strong>📡 Статус подключения</strong></div>
+        <div class="card-body">
+            <div class="status-grid">
+                <div class="status-box" id="st-conn">
+                    <div class="status-label">Wi-Fi Клиент</div>
+                    <div class="status-val">...</div>
+                </div>
+                <div class="status-box" id="st-ip">
+                    <div class="status-label">IP Адрес</div>
+                    <div class="status-val">...</div>
+                </div>
+                <div class="status-box" id="st-rssi">
+                    <div class="status-label">Сигнал (RSSI)</div>
+                    <div class="status-val">...</div>
+                </div>
+                <div class="status-box" id="st-time">
+                    <div class="status-label">Синхр. времени</div>
+                    <div class="status-val">...</div>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 0.9rem; color: #666;">
+                Текущее время ESP: <span id="esp-clock">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>⚙️ Настройки сети</strong></div>
+        <div class="card-body">
+
+            <h4>Подключение к роутеру (Station)</h4>
+            <div class="form-row">
+                <label>Имя сети (SSID):</label>
+                <div style="display:flex; gap:10px; width:100%;">
+                    <input type="text" id="sta-ssid" placeholder="MyWiFi">
+                    <button id="scan-btn" class="btn" style="width: auto;">🔍 Скан</button>
+                </div>
+            </div>
+            <div id="scan-results" class="wifi-list" style="display:none;"></div>
+
+            <div class="form-row">
+                <label>Пароль:</label>
+                <input type="password" id="sta-pass">
+            </div>
+
+            <div class="form-row" style="margin-top: 15px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="sta-static-cb" style="width:auto; margin:0;">
+                    <strong>Использовать статический IP</strong>
+                </label>
+            </div>
+            <div id="static-fields" class="static-ip-block" style="display:none;">
+                <div class="form-row"><label>IP Адрес:</label><input type="text" id="sta-ip" placeholder="192.168.1.100"></div>
+                <div class="form-row"><label>Маска подсети:</label><input type="text" id="sta-mask" placeholder="255.255.255.0"></div>
+                <div class="form-row"><label>Основной шлюз:</label><input type="text" id="sta-gw" placeholder="192.168.1.1"></div>
+                <div class="form-row"><label>DNS сервер:</label><input type="text" id="sta-dns" placeholder="8.8.8.8"></div>
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+            <h4>Собственная точка доступа (AP)</h4>
+            <div class="form-row">
+                <label>Имя точки (SSID):</label>
+                <input type="text" id="ap-ssid" placeholder="ESP32-AP">
+            </div>
+            <div class="form-row">
+                <label>Пароль AP (мин. 8 симв):</label>
+                <input type="password" id="ap-pass">
+            </div>
+
+            <div class="form-row" style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="ap-disable-cb" style="width:auto; margin:0;">
+                    <strong style="color:#e67e22;">Отключать Точку Доступа (AP) при наличии интернета</strong>
+                </label>
+            </div>
+
+            <div class="batch-actions">
+                <button id="save-wifi-btn" class="btn">💾 Сохранить и Подключить</button>
+                <span id="save-status" class="form-status"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/network.js" defer></script>

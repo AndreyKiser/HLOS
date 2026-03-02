@@ -1,0 +1,201 @@
+from .nanowebapi import Nanoweb, send_file, HttpError, cou_req
+import json
+import os
+from lib.kernel import Service, load
+from ubinascii import a2b_base64 as base64_decode
+import time
+import gc
+import uasyncio as asyncio
+import uos
+
+CREDENTIALS = ['admin', '123456789']
+
+content_type = {
+    'js': 'text/javascript', 'svg': 'image/svg+xml', 'json': 'application/json',
+    'stream': 'application/octet-stream', 'html': 'text/html; charset=utf-8', 'css': 'text/css'
+}
+
+
+def authenticate(credentials_ref):
+    async def fail(request):
+        # Очищаем буфер, если там что-то было
+        await request.write("HTTP/1.1 401 Unauthorized\r\n")
+        # Важно: без пробела после 'Basic', и четко указанный realm
+        await request.write('WWW-Authenticate: Basic realm="HLOS"\r\n')
+        await request.write("Content-Type: text/html; charset=utf-8\r\n")
+        await request.write("Content-Length: 42\r\n")  # Явно задаем длину
+        await request.write("Connection: close\r\n")
+        await request.write("\r\n")
+        await request.write("<h1>401: Требуется авторизация</h1>")
+
+    def decorator(func):
+        async def wrapper(self, request):
+            header = request.headers.get('authorization', request.headers.get('Authorization'))
+            if header is None: return await fail(request)
+            try:
+                kind, authorization = header.strip().split(' ', 1)
+                if kind != "Basic": return await fail(request)
+                auth_parts = base64_decode(authorization.strip()).decode('ascii').split(':')
+                if list(credentials_ref) != list(auth_parts): return await fail(request)
+            except Exception:
+                return await fail(request)
+            return await func(self, request)
+
+        return wrapper
+
+    return decorator
+
+
+async def send_header_api(request, cnt_type='json'):
+    await request.write("HTTP/1.1 200 OK\r\n")
+    await request.write(f"Content-Type: {content_type[cnt_type]}\r\n")
+    await request.write("access-control-allow-origin: *\r\n\r\n")
+
+
+async def read_json(request):
+    cl = request.headers.get('content-length', request.headers.get('Content-Length', 0))
+    content_length = int(cl)
+    if content_length == 0: return None
+    body = b''
+    while len(body) < content_length:
+        chunk = await request.read(content_length - len(body))
+        if not chunk: break
+        body += chunk
+    return json.loads(body)
+
+
+def get_custom_data(requested_data):
+    data = {}
+    data['datetime'] = '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.000Z'.format(*time.localtime()[:6])
+    data['currdir'] = os.getcwd()
+    data['uptime'] = int(time.ticks_ms() / 1000)
+    data['mem_free'] = gc.mem_free()
+    try:
+        ffd = uos.statvfs('/')
+        data['storage_free'] = ffd[1] * ffd[3]
+        data['storage_total'] = ffd[0] * ffd[2]
+    except:
+        data['storage_free'] = 0;
+        data['storage_total'] = 0
+    data['load'] = min(1, load[0])
+    data['cou_req'] = cou_req[0]
+    data['default_pass'] = (CREDENTIALS[1] == '123456789')
+    return data
+
+
+class WebServer(Service):
+    web_services = []
+
+    def __init__(self, name, kernel):
+        super().__init__(name)
+        self.kernel = kernel
+        self.app = Nanoweb(80)
+        self.app.assets_extensions += ('ico',)
+
+        self.load_settings()
+
+        self.app.route('/*')(self.ui)
+        self.app.route('/api/data')(self.api_data)
+        self.app.route('/')(self.index_page)
+        self.app.route('/files')(self.files_page)
+        self.app.route('/network')(self.network_page)
+        self.app.route('/system')(self.system_page)
+        self.app.route('/cron')(self.cron_page)
+        self.app.route('/standard')(self.standard_page)
+        self.app.route('/editor')(self.editor_page)
+
+    def load_settings(self):
+        try:
+            with open('system.json', 'r') as f:
+                conf = json.load(f)
+                self.name = conf.get('name', self.name)
+                CREDENTIALS[0] = conf.get('login', 'admin')
+                CREDENTIALS[1] = conf.get('password', '123456789')
+        except OSError:
+            pass
+
+    async def render_template(self, request, pages):
+        for page in pages:
+            path = f'/web/{page}'
+            if page == '_header.html':
+                try:
+                    with open(path, 'r') as f:
+                        content = f.read()
+                    await request.write(content.replace('{{name}}', self.name))
+                except:
+                    await send_file(request, path)
+            else:
+                await send_file(request, path)
+
+    async def render_page(self, request, content_html):
+        await request.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n")
+        await self.render_template(request, ('_header.html', content_html, '_footer.html'))
+
+    @authenticate(CREDENTIALS)
+    async def index_page(self, request):
+        await self.render_page(request, 'index.html')
+
+    @authenticate(CREDENTIALS)
+    async def files_page(self, request):
+        await self.render_page(request, 'files.html')
+
+    @authenticate(CREDENTIALS)
+    async def network_page(self, request):
+        await self.render_page(request, 'network.html')
+
+    @authenticate(CREDENTIALS)
+    async def system_page(self, request):
+        await self.render_page(request, 'system.html')
+
+    @authenticate(CREDENTIALS)
+    async def cron_page(self, request):
+        await self.render_page(request, 'cron.html')
+
+    @authenticate(CREDENTIALS)
+    async def standard_page(self, request):
+        await self.render_page(request, 'standard.html')
+
+    @authenticate(CREDENTIALS)
+    async def editor_page(self, request):
+        await self.render_page(request, 'editor.html')
+
+    async def api_data(self, request):
+        if request.method == "OPTIONS": return await self.api_send_response(request)
+        data = await read_json(request)
+        res = get_custom_data(data)
+        res['name'] = self.name
+        await send_header_api(request)
+        await request.write(json.dumps(res))
+
+    @authenticate(CREDENTIALS)
+    async def ui(self, request):
+        url = request.url.split('?', 1)[0]
+        if url.endswith('/'): url += 'index.html'
+        if '.' not in url: url += '.html'
+
+        # 1. Вычисляем расширение файла (js, css, html)
+        ext = url.split('.')[-1]
+        # 2. Берем правильный MIME-тип из вашего словаря в начале файла
+        ct = content_type.get(ext, 'text/plain')
+
+        try:
+            # 3. ВОТ ОНО! Отправляем правильные заголовки ДО того, как отправить сам файл
+            await request.write(f"HTTP/1.1 200 OK\r\nContent-Type: {ct}\r\nConnection: close\r\n\r\n")
+            await send_file(request, self.app.STATIC_DIR + url, binary=True)
+        except:
+            return 'Not Found', 404
+
+    async def api_send_response(self, request, methods="GET, POST, PUT, DELETE, OPTIONS", data=None):
+        await request.write(f"HTTP/1.1 200 OK\r\naccess-control-allow-origin: *\r\n")
+        await request.write("Content-Type: application/json\r\n\r\n")
+        if data:
+            await request.write(json.dumps(data))
+        else:
+            await request.write('{"status": true}')
+
+    async def run(self):
+        await asyncio.sleep(2);
+        await self.app.run()
+
+    def get_status(self):
+        return {"routes": [i[0] for i in self.app.routes], "port": self.app.port}

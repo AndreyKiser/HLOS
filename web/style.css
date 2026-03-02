@@ -1,0 +1,513 @@
+/* --- НОВЫЕ СТИЛИ ШАПКИ --- */
+.app-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #fff;
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid #eee;
+
+    /* Прибиваем шапку к верху */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.app-logo {
+    font-size: 1.5rem;
+    text-decoration: none;
+    line-height: 1;
+    color: var(--dark-color);
+}
+
+.app-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+
+/* --- Глобальные настройки --- */
+:root {
+    --primary-color: #007bff;
+    --danger-color: #dc3545;
+    --dark-color: #333;
+    --light-color: #f4f4f4;
+    --border-radius: 5px;
+    --shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem; /* Увеличили отступ сверху */
+    flex-grow: 1;
+}
+
+
+/* Универсальный компонент "Карточка" */
+.card {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* Контейнер для скролла таблицы на мобильных */
+.overflow-container {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+}
+
+/* --- СТИЛИ ДЛЯ files.html --- */
+
+.file-table {
+    /* width: 100%; */
+    border-collapse: collapse;
+}
+
+.file-table th,
+.file-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.file-table th {
+    font-weight: 600;
+}
+
+.col-checkbox {
+    width: 1%;
+    text-align: center;
+}
+#select-all-checkbox {
+    cursor: pointer;
+}
+.file-checkbox {
+    cursor: pointer;
+}
+
+.icon-folder::before { content: '📁'; margin-right: 8px; }
+.icon-file::before { content: '📄'; margin-right: 8px; }
+
+.btn, .btn-danger {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    transition: opacity 0.2s;
+}
+
+.btn {
+    background-color: var(--primary-color);
+}
+.btn-danger {
+    background-color: var(--danger-color);
+}
+.btn:hover, .btn-danger:hover {
+    opacity: 0.85;
+}
+
+.action-buttons button,
+.action-buttons a {
+    margin-right: 5px;
+}
+
+.dir-link {
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+.dir-link:hover {
+    text-decoration: underline;
+}
+
+.upload-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.upload-area input[type="file"] {
+    flex-grow: 1;
+}
+
+.upload-status {
+    padding: 0 1rem 1rem 1rem;
+    font-style: italic;
+}
+
+.batch-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* --- СТИЛИ ДЛЯ index.html --- */
+
+.main-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--dark-color);
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    border-color: var(--primary-color);
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.menu-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.menu-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-text small {
+    color: #6c757d;
+}
+
+.disabled-link {
+    background-color: #f8f8f8;
+    color: #aaa;
+    pointer-events: none;
+}
+
+.disabled-link .menu-text small {
+    color: #ccc;
+}
+
+
+/* --- ОБЩИЕ СТИЛИ (Футер) --- */
+
+footer {
+    background: #333;
+    color: #fff;
+    padding: 1rem 0;
+    margin-top: 2rem;
+    flex-shrink: 0;
+}
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+/* --- СТИЛИ ДЛЯ network.html --- */
+
+.current-status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.network-scan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.scan-status {
+    font-style: italic;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.network-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.network-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.network-item:hover {
+    border-color: var(--primary-color);
+    background-color: #f8f9fa;
+}
+
+.network-ssid {
+    flex-grow: 1;
+    font-weight: 600;
+}
+
+.network-details {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.network-rssi,
+.network-auth {
+    font-size: 1.25rem;
+    color: #555;
+}
+
+.network-chevron {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #aaa;
+    line-height: 1;
+}
+
+/* --- СТИЛИ ДЛЯ IP CONFIG (НОВЫЕ) --- */
+
+.ip-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+    color: #555;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.form-row label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-row input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.form-toggle {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-toggle label {
+    font-weight: normal; /* Обычный вес для toggle */
+    font-size: 1rem;
+}
+
+
+/* --- СТИЛИ ДЛЯ cron.html --- */
+
+.cron-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cron-table th,
+.cron-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.cron-table th:nth-child(2),
+.cron-table td:nth-child(2) {
+    width: 100px;
+}
+
+.cron-table input[type="text"] {
+    width: 100px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+}
+
+.cron-table .col-checkbox {
+    text-align: center;
+}
+
+.commands-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.command-item {
+    font-size: 0.9rem;
+    color: #333;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+/* --- СТИЛИ ДЛЯ onewire.html --- */
+
+.pin-control-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pin-control-card label {
+    font-weight: 600;
+}
+
+.pin-control-card input[type="number"] {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.ow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-family: "Courier New", Courier, monospace;
+}
+
+.ow-device-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+.ow-rom {
+    font-weight: 600;
+    color: #333;
+}
+
+.ow-type {
+    font-style: italic;
+    color: #555;
+}
+
+.ow-temp {
+    font-weight: bold;
+    color: var(--primary-color);
+    flex-grow: 1;
+    text-align: right;
+}
+
+/* --- СТИЛИ ДЛЯ SVG --- */
+#sensors-svg-container svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    display: block;
+}
+
+/* --- КРУПНЫЙ ИНТЕРФЕЙС --- */
+body {
+    font-size: 18px; /* Базовый крупный шрифт */
+}
+
+/* Крупные поля ввода и кнопки */
+input, select, textarea, button, .btn {
+    font-size: 16px !important;
+    padding: 10px 14px;
+}
+
+/* Заголовки карточек */
+.card-header, .editor-title {
+    font-size: 20px;
+    padding: 15px;
+}
+
+/* Крупная таблица файлов и планировщика */
+.file-table th, .file-table td,
+.cron-table th, .cron-table td {
+    font-size: 16px;
+    padding: 12px;
+}
+
+/* Меню файла (три точки) */
+.btn-icon {
+    font-size: 22px; /* Делаем три точки больше, чтобы удобно попадать пальцем */
+    padding: 5px 15px;
+}
+.dropdown-item {
+    font-size: 16px;
+    padding: 12px 15px;
+}
+
+/* Увеличиваем шапку */
+.app-title {
+    font-size: 1.5rem;
+}
+.app-logo {
+    font-size: 1.8rem;
+}

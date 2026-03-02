@@ -1,0 +1,31 @@
+<style>
+    /* Карточки модулей */
+    .module-card { margin-bottom: 20px; }
+    .sensor-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .sensor-row:last-child { border-bottom: none; }
+    .sensor-name { font-weight: bold; font-size: 1.1rem; color: #333; }
+    .sensor-value { font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+
+    /* Красивый iOS тумблер (Switch) */
+    .switch { position: relative; display: inline-block; width: 54px; height: 30px; margin: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 30px; }
+    .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: #28a745; }
+    input:checked + .slider:before { transform: translateX(24px); }
+    input:disabled + .slider { opacity: 0.6; cursor: not-allowed; }
+
+    /* Бейджи и Прогресс-бары для датчиков */
+    .badge { padding: 6px 12px; border-radius: 6px; background: #007bff; color: white; font-weight: bold; min-width: 50px; text-align: center; }
+    .badge-orange { background: #fd7e14; }
+    .progress-bar-bg { background: #e9ecef; border-radius: 6px; width: 120px; height: 12px; overflow: hidden; display: inline-block; }
+    .progress-bar-fill { background: #007bff; height: 100%; transition: width 0.3s ease; }
+</style>
+
+<div class="container" id="modules-container">
+    <div style="text-align:center; padding: 40px; color: #666;">
+        <h3>🔄 Загрузка модулей...</h3>
+    </div>
+</div>
+
+<script src="/standard.js" defer></script>

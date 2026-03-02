@@ -1,0 +1,50 @@
+<style>
+    /* Стили для выпадающего меню */
+    .dropdown { position: relative; display: inline-block; }
+    .btn-icon { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 4px 10px; border-radius: 4px; color: #333; font-weight: bold; }
+    .btn-icon:hover { background-color: #e9ecef; }
+    .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background-color: #fff; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item { color: #333; padding: 10px 15px; text-decoration: none; display: block; font-size: 14px; transition: background 0.2s; }
+    .dropdown-item:hover { background-color: #f1f1f1; }
+    .text-danger { color: #dc3545; }
+    .text-danger:hover { background-color: #ffe6e6; }
+</style>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <span>Текущая директория:</span>
+            <strong id="current-dir">/</strong>
+        </div>
+        <div class="card-body">
+            <div class="overflow-container">
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th class="col-checkbox"><input type="checkbox" id="select-all-checkbox" title="Выбрать все"></th>
+                            <th>Имя</th>
+                            <th>Размер</th>
+                            <th style="width: 50px; text-align: center;">...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="file-list-body"></tbody>
+                </table>
+            </div>
+            <div class="batch-actions">
+                <button id="delete-selected-btn" class="btn btn-danger">Удалить выбранное</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>Загрузить файл</strong></div>
+        <div class="card-body upload-area">
+            <input type="file" id="file-input">
+            <button id="upload-button" class="btn">Загрузить</button>
+        </div>
+        <div id="upload-status" class="upload-status"></div>
+    </div>
+</div>
+
+<script src="/files.js" defer></script>

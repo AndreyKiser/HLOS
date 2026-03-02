@@ -1,0 +1,95 @@
+<style>
+    .system-action-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 15px; }
+    .system-action-item:last-child { border-bottom: none; }
+    .action-text { flex-grow: 1; }
+    .action-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; color: #333; }
+    .action-desc { font-size: 0.9rem; color: #6c757d; line-height: 1.4; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    .btn-danger:hover { background-color: #c82333; }
+    .system-info-list { list-style: none; padding: 0; margin: 0; }
+    .system-info-list li { padding: 10px 0; border-bottom: 1px dashed #ddd; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;}
+    .system-info-list li:last-child { border-bottom: none; }
+    .info-label { color: #555; font-weight: bold; }
+    .info-value { color: #007bff; font-family: Consolas, monospace; font-size: 1.1rem; word-break: break-word; }
+    @media (max-width: 600px) { .system-action-item { flex-direction: column; align-items: flex-start; } .system-action-item .btn { width: 100%; } }
+</style>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header"><strong>ℹ️ Информация о системе</strong></div>
+        <div class="card-body">
+            <ul class="system-info-list" id="system-info-list"><li>Загрузка данных...</li></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>⚙️ Настройки системы</strong></div>
+        <div class="card-body">
+            <div class="form-row">
+                <label for="sys-name">Имя устройства в шапке:</label>
+                <input type="text" id="sys-name" placeholder="Например: Теплица 1">
+            </div>
+            <div class="form-row">
+                <label for="sys-timezone">Часовой пояс (UTC):</label>
+                <input type="number" id="sys-timezone" placeholder="3" title="Например: 3 для МСК">
+            </div>
+            <div class="batch-actions">
+                <button id="save-sys-btn" class="btn">💾 Сохранить настройки</button>
+                <span id="sys-status" class="form-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>🔒 Безопасность (Вход)</strong></div>
+        <div class="card-body">
+            <div class="form-row">
+                <label for="auth-login">Логин:</label>
+                <input type="text" id="auth-login" placeholder="admin">
+            </div>
+            <div class="form-row">
+                <label for="auth-pass">Пароль:</label>
+                <input type="password" id="auth-pass" placeholder="Новый пароль">
+            </div>
+            <div class="batch-actions">
+                <button id="save-auth-btn" class="btn">🔑 Сменить пароль</button>
+                <span id="auth-status" class="form-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>🕒 Ручная установка времени</strong></div>
+        <div class="card-body">
+            <div class="form-row">
+                <label for="datetime-input">Установить системное время:</label>
+                <input type="datetime-local" id="datetime-input">
+            </div>
+            <div class="batch-actions">
+                <button id="save-time-btn" class="btn">⏱️ Синхронизировать с телефоном</button>
+                <span id="time-status" class="form-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>⚠️ Управление устройством</strong></div>
+        <div class="card-body system-actions">
+            <div class="system-action-item">
+                <div class="action-text">
+                    <div class="action-title">Перезагрузить устройство</div>
+                    <div class="action-desc">Принудительно перезапускает контроллер.</div>
+                </div>
+                <button id="reboot-btn" class="btn btn-danger">🔄 Перезагрузить</button>
+            </div>
+            <div class="system-action-item">
+                <div class="action-text">
+                    <div class="action-title">Сброс настроек Wi-Fi</div>
+                    <div class="action-desc">Удаляет пароли сетей и включает Точку Доступа.</div>
+                </div>
+                <button id="factory-reset-btn" class="btn btn-danger">🗑️ Сбросить Wi-Fi</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/system.js" defer></script>

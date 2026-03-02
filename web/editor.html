@@ -1,0 +1,100 @@
+<style>
+    /* Добавлено width: 100% и box-sizing, чтобы убить сжатие в столбик */
+    .editor-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 160px);
+        padding: 15px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+    .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+    .editor-title { margin: 0; font-size: 1.4rem; color: #333; word-break: break-all; }
+
+    .editor-textarea { flex-grow: 1; width: 100%; font-family: Consolas, monospace; font-size: 18px; line-height: 1.5; padding: 15px; border: 1px solid #ced4da; border-radius: 6px; resize: none; outline: none; box-sizing: border-box; }
+    .editor-textarea:focus { border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+
+    .editor-actions { display: flex; gap: 10px; }
+    .btn-save { background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 18px; }
+    .btn-save:hover { background: #218838; }
+    .btn-cancel { background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; cursor: pointer; font-size: 18px; display: inline-block; text-align: center; }
+    .btn-cancel:hover { background: #5a6268; }
+
+    @media (max-width: 600px) {
+        .editor-container { padding: 10px; height: calc(100vh - 140px); }
+        .editor-actions { width: 100%; justify-content: space-between; }
+        .editor-actions .btn-save, .editor-actions .btn-cancel { flex-grow: 1; text-align: center; }
+    }
+</style>
+
+<div class="editor-container">
+    <div class="editor-header">
+        <h3 id="editor-title" class="editor-title">Загрузка...</h3>
+        <div class="editor-actions">
+            <a href="/files" class="btn-cancel">Отмена</a>
+            <button id="editor-save-btn" class="btn-save">💾 Сохранить</button>
+        </div>
+    </div>
+    <textarea id="editor-textarea" class="editor-textarea" spellcheck="false" disabled></textarea>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filename = urlParams.get('file');
+
+    const titleEl = document.getElementById('editor-title');
+    const textareaEl = document.getElementById('editor-textarea');
+    const saveBtn = document.getElementById('editor-save-btn');
+
+    if (!filename) {
+        titleEl.textContent = 'Ошибка: Файл не выбран';
+        return;
+    }
+
+    titleEl.textContent = `Редактирование: ${filename}`;
+
+    try {
+        const res = await fetch(`/show_content?file_name=${encodeURIComponent(filename)}&raw=true`);
+        if (res.ok) {
+            textareaEl.value = await res.text();
+            textareaEl.disabled = false;
+        } else {
+            textareaEl.value = 'Ошибка: Не удалось загрузить содержимое файла.';
+        }
+    } catch (e) {
+        textareaEl.value = 'Ошибка: Нет связи с устройством.';
+    }
+
+    saveBtn.addEventListener('click', async () => {
+        saveBtn.textContent = 'Сохранение...';
+        saveBtn.disabled = true;
+        textareaEl.disabled = true;
+
+        try {
+            const content = textareaEl.value;
+            const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
+
+            const res = await fetch(`/api/upload/${encodeURIComponent(filename)}`, {
+                method: 'PUT',
+                body: blob,
+                headers: { 'Content-Length': blob.size }
+            });
+
+            if (res.ok) {
+                alert('Файл успешно сохранен!');
+            } else {
+                alert('Ошибка при сохранении файла.');
+            }
+        } catch (e) {
+            alert('Ошибка сети. Проверьте подключение.');
+        } finally {
+            saveBtn.textContent = '💾 Сохранить';
+            saveBtn.disabled = false;
+            textareaEl.disabled = false;
+        }
+    });
+});
+</script>
