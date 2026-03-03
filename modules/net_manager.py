@@ -16,36 +16,55 @@ class NetworkManager(Service):
         self.timezone_offset = timezone_offset
         self.is_connecting = False
 
-    def load_config(self):
+    def _get_default_ap_name(self):
+        """Генерирует уникальное имя AP на основе MAC-адреса"""
         try:
-            with open('/wifi.json', 'r') as f:
-                return json.loads(f.read())
+            uid_hex = ubinascii.hexlify(machine.unique_id()).decode('ascii').upper()
+            return f"HLOS_{uid_hex[-4:]}"
         except Exception:
-            return {}
+            return "HLOS_Fallback"
+
+    def load_config(self):
+        """Читает конфиг, а если его нет — создает правильный дефолтный файл"""
+        try:
+            with open('wifi.json', 'r') as f:
+                config = json.loads(f.read())
+                if isinstance(config, dict):
+                    return config
+        except Exception:
+            pass  # Переходим к созданию дефолта
+
+        print("[NET_MANAGER] wifi.json not found or corrupted. Creating default config...")
+        default_config = {
+            "sta_ssid": "",
+            "sta_pass": "",
+            "sta_static": False,
+            "sta_ip": "",
+            "sta_mask": "255.255.255.0",
+            "sta_gw": "",
+            "sta_dns": "8.8.8.8",
+            "ap_ssid": self._get_default_ap_name(),
+            "ap_pass": "123456789",
+            "ap_disable": False
+        }
+
+        try:
+            with open('wifi.json', 'w') as f:
+                f.write(json.dumps(default_config))
+        except Exception as e:
+            print("[NET_MANAGER] Error saving default wifi.json:", e)
+
+        return default_config
 
     def setup_ap(self):
         if not self.ap.active():
             self.ap.active(True)
 
-        # 1. Безопасно получаем уникальное имя
-        try:
-            import ubinascii
-            import machine
-            uid_hex = ubinascii.hexlify(machine.unique_id()).decode('ascii').upper()
-            default_ssid = f"HLOS_{uid_hex[-4:]}"
-        except Exception:
-            default_ssid = "HLOS_Fallback"
-
+        # Конфиг теперь гарантированно содержит нужные поля
         config = self.load_config()
-
-        # 2. Берем имя из конфига. Если там пустота ("" или None) — берем уникальное
-        ap_ssid = config.get('ap_ssid')
-        if not ap_ssid:
-            ap_ssid = default_ssid
-
+        ap_ssid = config.get('ap_ssid', self._get_default_ap_name())
         ap_pass = config.get('ap_pass', '123456789')
 
-        # 3. Применяем настройки
         try:
             if ap_pass and len(ap_pass) >= 8:
                 self.ap.config(essid=ap_ssid, password=ap_pass, authmode=3)
@@ -107,7 +126,6 @@ class NetworkManager(Service):
             ntptime.settime()
             rtc = machine.RTC()
 
-            # Читаем таймзону из system.json
             tz_offset = self.timezone_offset
             try:
                 with open('system.json', 'r') as f:
@@ -116,7 +134,6 @@ class NetworkManager(Service):
             except Exception:
                 pass
 
-            # Применяем сдвиг
             t = time.time() + (tz_offset * 3600)
             tm = time.localtime(t)
             rtc.datetime((tm[0], tm[1], tm[2], tm[6], tm[3], tm[4], tm[5], 0))
@@ -126,6 +143,7 @@ class NetworkManager(Service):
         except Exception as e:
             print("Failed to sync time:", e)
             return False
+
     async def monitor_network(self):
         while True:
             await asyncio.sleep(30)

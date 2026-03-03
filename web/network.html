@@ -19,6 +19,7 @@
     .wifi-rssi { font-size: 0.8rem; color: #888; }
 
     .static-ip-block { background: #fdfdfd; border-left: 3px solid #007bff; padding: 10px 15px; margin-top: 10px; border-radius: 0 4px 4px 0; }
+    .batch-actions { margin-top: 15px; display: flex; align-items: center; gap: 15px; }
 </style>
 
 <div class="container">
@@ -57,7 +58,7 @@
             <div class="form-row">
                 <label>Имя сети (SSID):</label>
                 <div style="display:flex; gap:10px; width:100%;">
-                    <input type="text" id="sta-ssid" placeholder="MyWiFi">
+                    <input type="text" id="sta-ssid">
                     <button id="scan-btn" class="btn" style="width: auto;">🔍 Скан</button>
                 </div>
             </div>
@@ -75,18 +76,23 @@
                 </label>
             </div>
             <div id="static-fields" class="static-ip-block" style="display:none;">
-                <div class="form-row"><label>IP Адрес:</label><input type="text" id="sta-ip" placeholder="192.168.1.100"></div>
+                <div class="form-row"><label>IP Адрес:</label><input type="text" id="sta-ip"></div>
                 <div class="form-row"><label>Маска подсети:</label><input type="text" id="sta-mask" placeholder="255.255.255.0"></div>
-                <div class="form-row"><label>Основной шлюз:</label><input type="text" id="sta-gw" placeholder="192.168.1.1"></div>
-                <div class="form-row"><label>DNS сервер:</label><input type="text" id="sta-dns" placeholder="8.8.8.8"></div>
+                <div class="form-row"><label>Основной шлюз:</label><input type="text" id="sta-gw"></div>
+                <div class="form-row"><label>DNS сервер:</label><input type="text" id="sta-dns"></div>
             </div>
 
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <div class="batch-actions">
+                <button id="save-sta-btn" class="btn" style="background-color: #007bff;">💾 Подключиться к роутеру</button>
+                <span id="save-sta-status" class="form-status"></span>
+            </div>
+
+            <hr style="margin: 30px 0; border: 0; border-top: 2px solid #eee;">
 
             <h4>Собственная точка доступа (AP)</h4>
             <div class="form-row">
                 <label>Имя точки (SSID):</label>
-                <input type="text" id="ap-ssid" placeholder="ESP32-AP">
+                <input type="text" id="ap-ssid">
             </div>
             <div class="form-row">
                 <label>Пароль AP (мин. 8 симв):</label>
@@ -101,9 +107,10 @@
             </div>
 
             <div class="batch-actions">
-                <button id="save-wifi-btn" class="btn">💾 Сохранить и Подключить</button>
-                <span id="save-status" class="form-status"></span>
+                <button id="save-ap-btn" class="btn" style="background-color: #28a745;">💾 Сохранить настройки AP</button>
+                <span id="save-ap-status" class="form-status"></span>
             </div>
+
         </div>
     </div>
 </div>

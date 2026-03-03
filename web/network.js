@@ -21,8 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const scanBtn = document.getElementById('scan-btn');
     const scanRes = document.getElementById('scan-results');
-    const saveBtn = document.getElementById('save-wifi-btn');
-    const saveStatus = document.getElementById('save-status');
+
+    // ДВЕ КНОПКИ
+    const saveStaBtn = document.getElementById('save-sta-btn');
+    const saveStaStatus = document.getElementById('save-sta-status');
+    const saveApBtn = document.getElementById('save-ap-btn');
+    const saveApStatus = document.getElementById('save-ap-status');
+
+    let configLoaded = false;
 
     staStaticCb.addEventListener('change', () => {
         staticFields.style.display = staStaticCb.checked ? 'block' : 'none';
@@ -47,18 +53,27 @@ document.addEventListener('DOMContentLoaded', () => {
             stTime.querySelector('.status-val').textContent = data.time_synced ? "ОК" : "Нет";
             espClock.textContent = data.current_time;
 
-            if (!staSsid.value && data.config && !document.activeElement.isSameNode(staSsid)) {
+            if (!configLoaded && data.config) {
                 staSsid.value = data.config.sta_ssid || '';
-                apSsid.value = data.config.ap_ssid || '';
+
+                staPass.value = data.config.sta_pass || '';
+                if (data.config.sta_pass) staPass.placeholder = "Пароль сохранен";
+
+                apSsid.value = data.config.ap_ssid || data.ap_ssid_current || '';
+
                 apPass.value = data.config.ap_pass || '';
+                if (data.config.ap_pass) apPass.placeholder = "Пароль сохранен";
 
                 staStaticCb.checked = data.config.sta_static === true;
                 staStaticCb.dispatchEvent(new Event('change'));
-                staIp.value = data.config.sta_ip || '';
-                staMask.value = data.config.sta_mask || '255.255.255.0';
-                staGw.value = data.config.sta_gw || '';
-                staDns.value = data.config.sta_dns || '8.8.8.8';
+
+                staIp.value = data.config.sta_ip || (data.sta_ip !== "0.0.0.0" ? data.sta_ip : '');
+                staMask.value = data.config.sta_mask || (data.sta_mask !== "0.0.0.0" ? data.sta_mask : '255.255.255.0');
+                staGw.value = data.config.sta_gw || (data.sta_gw !== "0.0.0.0" ? data.sta_gw : '');
+                staDns.value = data.config.sta_dns || (data.sta_dns !== "0.0.0.0" ? data.sta_dns : '8.8.8.8');
+
                 apDisableCb.checked = data.config.ap_disable === true;
+                configLoaded = true;
             }
         } catch (e) { console.error(e); }
     }
@@ -85,51 +100,70 @@ document.addEventListener('DOMContentLoaded', () => {
         finally { scanBtn.disabled = false; scanBtn.textContent = "🔍 Скан"; }
     });
 
-    saveBtn.addEventListener('click', async () => {
-        saveBtn.disabled = true;
-        saveStatus.style.color = "blue";
-        saveStatus.textContent = "Применяем настройки...";
+    // ОБРАБОТЧИК ДЛЯ РОУТЕРА (STA)
+    saveStaBtn.addEventListener('click', async () => {
+        saveStaBtn.disabled = true;
+        saveStaStatus.style.color = "blue";
+        saveStaStatus.textContent = "Подключение...";
 
         const payload = {
+            save_type: 'sta', // Флаг для сервера
             sta_ssid: staSsid.value.trim(),
             sta_pass: staPass.value.trim(),
             sta_static: staStaticCb.checked,
             sta_ip: staIp.value.trim(),
             sta_mask: staMask.value.trim(),
             sta_gw: staGw.value.trim(),
-            sta_dns: staDns.value.trim(),
+            sta_dns: staDns.value.trim()
+        };
+
+        try {
+            await fetch('/api/network/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            let attempts = 0;
+            const checkConnect = setInterval(() => {
+                attempts++;
+                if (stConn.querySelector('.status-val').textContent === "Подключено") {
+                    clearInterval(checkConnect);
+                    saveStaStatus.style.color = "green";
+                    saveStaStatus.textContent = "✅ Подключено!";
+                    saveStaBtn.disabled = false;
+                }
+                if (attempts > 15) {
+                    clearInterval(checkConnect);
+                    saveStaStatus.style.color = "red";
+                    saveStaStatus.textContent = "❌ Ошибка.";
+                    saveStaBtn.disabled = false;
+                }
+            }, 3000);
+        } catch (e) {
+            saveStaStatus.textContent = "Ошибка связи";
+            saveStaBtn.disabled = false;
+        }
+    });
+
+    // ОБРАБОТЧИК ДЛЯ ТОЧКИ ДОСТУПА (AP)
+    saveApBtn.addEventListener('click', async () => {
+        saveApBtn.disabled = true;
+        saveApStatus.style.color = "blue";
+        saveApStatus.textContent = "Применяем настройки...";
+
+        const payload = {
+            save_type: 'ap', // Флаг для сервера
             ap_ssid: apSsid.value.trim(),
             ap_pass: apPass.value.trim(),
             ap_disable: apDisableCb.checked
         };
 
         try {
-            await fetch('/api/network/save', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-
-            saveStatus.textContent = "⏳ Ждем подключения...";
-
-            let attempts = 0;
-            const checkConnect = setInterval(() => {
-                attempts++;
-                if (stConn.querySelector('.status-val').textContent === "Подключено") {
-                    clearInterval(checkConnect);
-                    saveStatus.style.color = "green";
-                    saveStatus.textContent = "✅ УСПЕХ!";
-                    saveBtn.disabled = false;
-                }
-                if (attempts > 15) {
-                    clearInterval(checkConnect);
-                    saveStatus.style.color = "red";
-                    saveStatus.textContent = "❌ Не удалось получить IP.";
-                    saveBtn.disabled = false;
-                }
-            }, 3000);
+            await fetch('/api/network/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            setTimeout(() => {
+                saveApStatus.style.color = "green";
+                saveApStatus.textContent = "✅ Сохранено!";
+                saveApBtn.disabled = false;
+            }, 2000);
         } catch (e) {
-            saveStatus.textContent = "Ошибка связи";
-            saveBtn.disabled = false;
+            saveApStatus.textContent = "Ошибка связи";
+            saveApBtn.disabled = false;
         }
     });
 });

@@ -1,12 +1,13 @@
 import gc
 import machine as m
-from machine import reset
+from machine import reset, Pin
 import ujson as json
 import webrepl
 
 from lib.kernel import os_kernel, Kernel, Service, load
 from modules.net_manager import NetworkManager
 from modules.GPIO_board import GPIO_board
+from modules.hldevs import PumpOnGPIO
 from modules.cron import CronScheduler
 from modules.hw_reset import HardResetButton
 
@@ -26,7 +27,10 @@ cron = None
 pins = None
 sw = None
 
-def init():
+h = "reset(), net.sta.scan(), net.connect(lan,psw), net.status, ..."
+
+
+class init():
     global net, sw, cron, pins
 
     # 1. Загрузка имени системы
@@ -39,24 +43,69 @@ def init():
         system_name = 'MyDevice'
         tz_offset = 7
 
-    # 2. Системные службы
+    # 2. БЕЗОПАСНАЯ загрузка конфигурации железа
+    try:
+        with open('hardware.json', 'r') as f:
+            hw_config = json.load(f)
+    except (OSError, ValueError):
+        print("ВНИМАНИЕ: Ошибка чтения hardware.json! Загружен безопасный режим.")
+        hw_config = {"pins": [], "cron_commands": []}
+
+    # Подготовка списка пинов (заменяем 1 на Pin.OUT)
+    pins_list = []
+    for p in hw_config.get('pins', []):
+        mode = Pin.OUT if p[1] == 1 else Pin.IN
+        pins_list.append((p[0], mode, p[2]))
+
+    # --- СИСТЕМНЫЕ СЛУЖБЫ ---
     net = NetworkManager(name='NET_MANAGER', timezone_offset=tz_offset)
     os_kernel.add_task(net)
 
-    # Пустая доска GPIO (позже прикрутим чтение из конфига)
-    pins = GPIO_board([], name="GPIO_board", group=2)
+    # Инициализация GPIO из конфига
+    pins = GPIO_board(pins_list, name="GPIO_board", group=2)
     os_kernel.add_task(pins)
 
     cron = CronScheduler()
     os_kernel.add_task(cron)
 
-    # Кнопка сброса (без указания пина — определит сама)
-    hw_reset = HardResetButton(name="HW_Reset")
+    hw_reset = HardResetButton(name="HW_Reset", pin_num=9)
     os_kernel.add_task(hw_reset)
 
-    # 3. Веб-сервер
     web = WebServer(name=system_name, kernel=os_kernel)
     os_kernel.add_task(web)
+
+    pumps = PumpOnGPIO()
+
+    # --- РЕЕСТР ОБЪЕКТОВ ДЛЯ ПЛАНИРОВЩИКА ---
+    # Сюда добавляем все объекты, чьи функции можно вызывать из JSON
+    cron_registry = {
+        "pins": pins,
+        "pumps": pumps
+    }
+
+    # --- ДИНАМИЧЕСКАЯ РЕГИСТРАЦИЯ КОМАНД КРОНА ---
+    for cmd in hw_config.get('cron_commands', []):
+        target_str = cmd.get('target')  # например, "pins.set_value"
+        if not target_str:
+            continue
+
+        try:
+            # Разбиваем "pins.set_value" на "pins" и "set_value"
+            obj_name, method_name = target_str.split('.')
+
+            if obj_name in cron_registry:
+                target_obj = cron_registry[obj_name]
+
+                # Магия Python: достаем реальную функцию по имени строки
+                target_func = getattr(target_obj, method_name)
+
+                # Регистрируем в планировщике
+                cron.append_command(cmd['id'], target_func, cmd['name'], cmd['args'])
+            else:
+                print(f"ВНИМАНИЕ: Объект '{obj_name}' не найден в реестре Крона.")
+
+        except Exception as e:
+            print(f"ВНИМАНИЕ: Ошибка загрузки задачи Крона '{target_str}': {e}")
 
     # --- Инициализация Веб-API ---
     _ = CronApi(name="Web cron", web=web)
@@ -73,4 +122,5 @@ def init():
 if __name__ == "__main__":
     init()
     print('System started.')
+    print('Type h for help')
     print('Free RAM: ', gc.mem_free())

@@ -1,0 +1,10 @@
+{
+"ssid":"Mikrotik",
+"dns":"8.8.8.8",
+"static_ip":false,
+"ip":null,
+"gateway":null,
+"pswd":"hoood171",
+"subnet":null,
+"tx_power": 12
+}

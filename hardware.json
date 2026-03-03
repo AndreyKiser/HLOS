@@ -1,0 +1,12 @@
+{
+  "pins": [
+    [4, 1, "Полив Ладрао 1 ряд"],
+    [5, 1, "Полив Ладрао 2 ряд"]
+  ],
+  "cron_commands": [
+    {"id": 3, "target": "pins.set_value", "name": "Включить 4", "args": [4, 1]},
+    {"id": 4, "target": "pins.set_value", "name": "Выключить 4", "args": [4, 0]},
+    {"id": 7, "target": "pumps.start", "name": "полив Ладрао ряд 1", "args": [4, 240]},
+    {"id": 8, "target": "pumps.start", "name": "полив Ладрао ряд 2", "args": [5, 60]}
+  ]
+}
