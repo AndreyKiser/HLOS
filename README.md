@@ -25,11 +25,12 @@ HLOS — MicroPython OS Framework
 
 2. Установка MicroPython для Windows
 Скачайте и установите Flash Download Tool https://docs.espressif.com/projects/esp-test-tools/en/latest/esp32/production_stage/tools/flash_download_tool.html
+
 При запуске программы выберите свою версию ESP32 ![1](https://github.com/user-attachments/assets/517d119b-a5cd-44df-a1c1-8edf60c0e8ec)
 
    
 
-3. Подключение к сети
+4. Подключение к сети
 
 Для загрузки HLOS устройство должно иметь доступ к интернету. Подключитесь к Wi-Fi через REPL:
 Python
