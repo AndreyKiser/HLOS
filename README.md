@@ -2,7 +2,7 @@ HLOS — MicroPython OS Framework
 
 Система управления для контроллеров ESP32, оптимизированная для задач автоматизации и гидропоники. Установка и обновление осуществляются напрямую из репозитория через стандартный инструмент mip.
 🚀 Быстрый старт
-1. Установка MicroPython
+1. Установка MicroPython для Linux
 
 Прежде чем устанавливать HLOS, необходимо прошить контроллер свежей версией MicroPython.
 
@@ -23,7 +23,13 @@ HLOS — MicroPython OS Framework
 
     (Замените /dev/ttyUSB0 на ваш COM-порт и укажите имя скачанного файла прошивки).
 
-2. Подключение к сети
+2. Установка MicroPython для Windows
+Скачайте и установите Flash Download Tool https://docs.espressif.com/projects/esp-test-tools/en/latest/esp32/production_stage/tools/flash_download_tool.html
+При запуске программы выберите свою версию ESP32 ![1](https://github.com/user-attachments/assets/517d119b-a5cd-44df-a1c1-8edf60c0e8ec)
+
+   
+
+3. Подключение к сети
 
 Для загрузки HLOS устройство должно иметь доступ к интернету. Подключитесь к Wi-Fi через REPL:
 Python
@@ -44,7 +50,7 @@ while not wlan.isconnected():
 
 print("Connected!", wlan.ifconfig())
 
-3. Установка HLOS через mip
+4. Установка HLOS через mip
 
 Как только интернет настроен, установите систему одной командой. Мы используем параметр target="/", чтобы системные файлы (main.py, boot.py) попали в корневую директорию, а не в /lib.
 Python
