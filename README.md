@@ -30,23 +30,29 @@ HLOS — MicroPython OS Framework
 
    
 
-4. Подключение к сети
+3. Подключение к сети
 
 Для загрузки HLOS устройство должно иметь доступ к интернету. Подключитесь к Wi-Fi через REPL:
 Python
 
 import network
+
 import time
 
 ssid = 'ВАШ_WIFI_SSID'
+
 password = 'ВАШ_ПАРОЛЬ'
 
 wlan = network.WLAN(network.STA_IF)
+
 wlan.active(True)
+
 wlan.connect(ssid, password)
 
 while not wlan.isconnected():
+
     print("Connecting...")
+    
     time.sleep(1)
 
 print("Connected!", wlan.ifconfig())
@@ -57,6 +63,7 @@ print("Connected!", wlan.ifconfig())
 Python
 
 import mip
+
 mip.install("github:HydroLED/HLOS", target="/")
 
 🛠 Обновление проекта
